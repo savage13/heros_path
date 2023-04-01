@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BotW Hero's Path</title>
+    <style>
+      body {
+          font-family: Arial, Helvetica, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <div>Hero's Path Generator</div>
+    <div>Tracker Directory: <input id="track" type="file" webkitdirectory mozdirectory /> Upload your tracker directory, it should be in the same directory as the album, pict_book and save files 0 to 7</div>
+    <div><button id="save">Download</button></div>
+    <script src="Trackblock.js" type="module"></script>
+    <canvas width="1200" height="1000"></canvas>
+    <script type="module">
+      import { trackRead, trackReadFiles } from './TrackBlock.js';
+
+      const canvas = document.querySelector('canvas');
+      const ctx = canvas.getContext('2d');
+      const width = ctx.canvas.width;
+      const height = ctx.canvas.height;
+      const width0 = 6000;
+      const height0 = 5000;
+
+      const drawing = new Image();
+      drawing.src = "BotW-Map.jpg"; // can also be a remote URL e.g. http://
+      drawing.onload = function() {
+          ctx.drawImage(drawing,0,0,width,height);
+      };
+
+      // https://stackoverflow.com/a/58652379
+      function save(){
+          let downloadLink = document.createElement('a');
+          downloadLink.setAttribute('download', 'BotW_Heros_Path.png');
+          let canvas_ = canvas;
+          let dataURL = canvas_.toDataURL('image/png');
+          let url = dataURL.replace(/^data:image\/png/,'data:application/octet-stream');
+          downloadLink.setAttribute('href', url);
+          downloadLink.click();
+      }
+      const save_el = document.querySelector('#save');
+      save_el.addEventListener('click', (ev) => { save(); });
+
+      function draw_point(x,y) {
+          x = (1.0 + (x / width0))/2;  // convert x[-5000,5000] to [0,1]
+          y = (1.0 + (y / height0))/2; // convert y[-4000,4000] to [0,1]
+
+          x = x * width;  // convert [0,1] to map units [width, height]
+          y = y * height; // ^^^
+
+          ctx.beginPath();
+          ctx.fillStyle = "rgba(86,255,182,0.3)";
+          ctx.arc(x, y, 1, 0, 2*Math.PI, true);
+          ctx.fill();
+      }
+
+      let tracks = []
+      const ele =document.querySelector('#track');
+      ele.addEventListener('change', async function(e) {
+          const files = [];
+          for(const file of this.files) {
+              if(file.name.search(/trackblock...sav/) != -1) {
+                  files.push(file);
+              }
+          }
+          tracks = await trackReadFiles(files);
+          tracks.forEach(track => {
+              track.pts.forEach(p => draw_point(p.x, p.y));
+          })
+      });
+    </script>
+  </body>
+</html>
