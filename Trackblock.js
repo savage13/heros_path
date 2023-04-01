@@ -9,6 +9,7 @@ function uint8(buf, little) {
 function uint16(buf, little) {
     return new DataView(buf).getUint16(0, little);
 }
+
 export async function trackRead(file) {
     const ybits = 13;
     const xbits = 14;
